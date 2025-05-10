@@ -4,7 +4,7 @@ Simple parser and calculator.
 
 ## Supported expressions
 
- +
+`+
  -
  *
  /
@@ -16,6 +16,7 @@ Simple parser and calculator.
  n!
  pi
  e
+`
 
 We trust that the user inputs valid expressions. There are no syntax detection or correction.
  
