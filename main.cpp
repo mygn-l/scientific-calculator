@@ -134,6 +134,18 @@ float cosine (float x) {
     return sine(x + pi / 2);
 }
 
+float tangent (float x) {
+    return sine(x) / cosine(x);
+}
+
+float absolute (float x) {
+    if (x < 0) {
+        return -x;
+    } else {
+        return x;
+    }
+}
+
 string clean_space (string expression) {
     string cleaned_expression = expression;
     for (int index = 0; index < cleaned_expression.length(); index++) {
@@ -151,48 +163,20 @@ string postfix(string expression)
     string postfix_expression = "";
     stack<int> operations; // add 1, subtract 2, multiply 3, divide 4, exponentiation 5, unknown 999
     
+    int previous_type = 2; // closing parenthesis 1, number 1, pi 1, e 1, factorial 1, others 2
     int current_operation_code = 0;
     int parenthesis_depth = 0;
     
     while (index < expression.length()){
-        if (isdigit(expression[index])){
+        if (isdigit(expression[index]) || (expression[index] == '-' && previous_type == 2)){
             string current_number = "";
-            while(isdigit(expression[index]) || expression[index] == '.'){
+            do {
                 current_number += expression[index];
                 index++;
-            }
+            } while(isdigit(expression[index]) || expression[index] == '.');
             postfix_expression += current_number;
             postfix_expression += " ";
-        } else if (operation_code(expression[index]) != 999) {
-            current_operation_code = operation_code(expression[index]);
-            if (operations.size() == 0 || current_operation_code > operations.top() || parenthesis_depth > 0) {
-                operations.push(current_operation_code);
-            } else {
-                while(operations.size() > 0 && current_operation_code <= operations.top()) {
-                    postfix_expression += operation_string(operations.top());
-                    postfix_expression += " ";
-                    operations.pop();
-                }
-                operations.push(current_operation_code);
-            }
-            index++;
-        } else if (expression[index] == '(') {
-            operations.push(0);
-            parenthesis_depth++;
-            index++;
-        } else if (expression[index] == ')') {
-            while(operations.top() != 0) {
-                postfix_expression += operation_string(operations.top());
-                postfix_expression += " ";
-                operations.pop();
-            }
-            operations.pop();
-            parenthesis_depth--;
-            index++;
-        } else if (expression[index] == '!') {
-            postfix_expression += "!";
-            postfix_expression += " ";
-            index++;
+            previous_type = 1;
         } else if (isalpha(expression[index])) {
             string current_operation = "";
             while(isalpha(expression[index])){
@@ -203,12 +187,16 @@ string postfix(string expression)
             if (current_operation == "pi") {
                 postfix_expression += to_string(pi);
                 postfix_expression += " ";
+                previous_type = 1;
                 continue;
             } else if (current_operation == "e") {
                 postfix_expression += to_string(e);
                 postfix_expression += " ";
+                previous_type = 1;
                 continue;
             }
+            
+            previous_type = 2; // if not pi or e
             
             int moving_parenthesis_depth = parenthesis_depth;
             string first_operand = "";
@@ -255,10 +243,53 @@ string postfix(string expression)
             } else if (current_operation == "cos") {
                 postfix_expression += "c";
                 postfix_expression += " ";
+            } else if (current_operation == "tan") {
+                postfix_expression += "t";
+                postfix_expression += " ";
             } else if (current_operation == "ln") {
                 postfix_expression += "L";
                 postfix_expression += " ";
+            } else if (current_operation == "sqrt") {
+                postfix_expression += "r";
+                postfix_expression += " ";
+            } else if (current_operation == "abs") {
+                postfix_expression += "a";
+                postfix_expression += " ";
             }
+        } else if (operation_code(expression[index]) != 999) {
+            current_operation_code = operation_code(expression[index]);
+            if (operations.size() == 0 || current_operation_code > operations.top() || parenthesis_depth > 0) {
+                operations.push(current_operation_code);
+            } else {
+                while(operations.size() > 0 && current_operation_code <= operations.top()) {
+                    postfix_expression += operation_string(operations.top());
+                    postfix_expression += " ";
+                    operations.pop();
+                }
+                operations.push(current_operation_code);
+            }
+            previous_type = 2;
+            index++;
+        } else if (expression[index] == '(') {
+            operations.push(0);
+            parenthesis_depth++;
+            previous_type = 2;
+            index++;
+        } else if (expression[index] == ')') {
+            while(operations.top() != 0) {
+                postfix_expression += operation_string(operations.top());
+                postfix_expression += " ";
+                operations.pop();
+            }
+            operations.pop();
+            parenthesis_depth--;
+            previous_type = 1;
+            index++;
+        } else if (expression[index] == '!') {
+            postfix_expression += "!";
+            postfix_expression += " ";
+            previous_type = 1;
+            index++;
         } else {
             index++;
         }
@@ -277,12 +308,12 @@ float calculate(string postfix_expression) {
     stack<float> numbers;
     
     while (index < postfix_expression.length()) {
-        if (isdigit(postfix_expression[index])){
+        if (isdigit(postfix_expression[index]) || (postfix_expression[index] == '-' && isdigit(postfix_expression[index + 1]))) {
             string current_number = "";
-            while(isdigit(postfix_expression[index]) || postfix_expression[index] == '.'){
+            do {
                 current_number += postfix_expression[index];
                 index++;
-            }
+            } while(isdigit(postfix_expression[index]) || postfix_expression[index] == '.');
             float current_number_float = stof(current_number);
             numbers.push(current_number_float);
         } else if (postfix_expression[index] == '+') {
@@ -347,6 +378,21 @@ float calculate(string postfix_expression) {
             numbers.pop();
             numbers.push(cosine(first_operand));
             index++;
+        } else if (postfix_expression[index] == 't') {
+            float first_operand = numbers.top();
+            numbers.pop();
+            numbers.push(tangent(first_operand));
+            index++;
+        } else if (postfix_expression[index] == 'r') {
+            float first_operand = numbers.top();
+            numbers.pop();
+            numbers.push(exp_float(first_operand, 1.0 / 2.0));
+            index++;
+        } else if (postfix_expression[index] == 'a') {
+            float first_operand = numbers.top();
+            numbers.pop();
+            numbers.push(absolute(first_operand));
+            index++;
         } else {
             index++;
         }
@@ -365,7 +411,7 @@ int main()
     string cleaned_expression = clean_space(expression);
     
     string postfix_expression = postfix(cleaned_expression);
-    //cout << postfix_expression << "\n";
+    cout << postfix_expression << "\n";
     
     float result = calculate(postfix_expression);
     cout << "Answer: " << result << "\n";
