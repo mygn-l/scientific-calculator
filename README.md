@@ -10,11 +10,24 @@ Simple parser and calculator.
  *
  /
  ^ (exponent)
+ 
+ sqrt(x)
+ 
  ln(a)
  log(a, b)
+ 
  sin(x)
  cos(x)
+ tan(x)
+ arcsin(x)
+ arccos(x)
+ arctan(x)
+ 
+ floor(x)
+ abs(x)
+ 
  n!
+ 
  pi
  e
 ```
