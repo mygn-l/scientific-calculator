@@ -1,6 +1,6 @@
 # Scientific Calculator
 
-Simple parser and calculator.
+Simple parser and calculator. Built using the four basic arithmetic operations, and numerical analysis.
 
 ## Supported expressions
 
