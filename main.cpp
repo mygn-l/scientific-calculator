@@ -1,15 +1,29 @@
 /*
  Supported symbols:
+ 
  +
  -
  *
  /
  ^ (exponent)
+ 
+ sqrt(x)
+ 
  ln(a)
  log(a, b)
+ 
  sin(x)
  cos(x)
+ tan(x)
+ arcsin(x)
+ arccos(x)
+ arctan(x)
+ 
+ floor(x)
+ abs(x)
+ 
  n!
+ 
  pi
  e
 */
@@ -146,6 +160,36 @@ float absolute (float x) {
     }
 }
 
+float floor_ (float x) {
+    int x_cut = (int) x;
+    float x_cut_float = static_cast<float> (x_cut);
+    return x_cut_float;
+}
+
+float ceil_ (float x) {
+    return floor_(x) + 1.0;
+}
+
+float arcsin (float x) {
+    float sum = 0;
+    for (int n = 0; n < taylor_precision; n++) {
+        sum += factorial(2 * n) * exp_int(x, 2 * n + 1) / (exp_int(4, n) * exp_int(factorial(n), 2) * (2 * n + 1));
+    }
+    return sum;
+}
+
+float arccos (float x) {
+    return pi / 2 - arcsin(x);
+}
+
+float arctan (float x) {
+    float sum = 0;
+    for (int n = 0; n < taylor_precision; n++) {
+        sum += exp_int(-1, n) * exp_int(x, 2 * n + 1) / (2 * n + 1);
+    }
+    return sum;
+}
+
 string clean_space (string expression) {
     string cleaned_expression = expression;
     for (int index = 0; index < cleaned_expression.length(); index++) {
@@ -157,8 +201,7 @@ string clean_space (string expression) {
     return cleaned_expression;
 }
 
-string postfix(string expression)
-{
+string postfix(string expression) {
     int index = 0;
     string postfix_expression = "";
     stack<int> operations; // add 1, subtract 2, multiply 3, divide 4, exponentiation 5, unknown 999
@@ -254,6 +297,21 @@ string postfix(string expression)
                 postfix_expression += " ";
             } else if (current_operation == "abs") {
                 postfix_expression += "a";
+                postfix_expression += " ";
+            } else if (current_operation == "floor") {
+                postfix_expression += "F";
+                postfix_expression += " ";
+            } else if (current_operation == "ceil") {
+                postfix_expression += "C";
+                postfix_expression += " ";
+            } else if (current_operation == "arcsin") {
+                postfix_expression += "q";
+                postfix_expression += " ";
+            } else if (current_operation == "arccos") {
+                postfix_expression += "w";
+                postfix_expression += " ";
+            } else if (current_operation == "arctan") {
+                postfix_expression += "e";
                 postfix_expression += " ";
             }
         } else if (operation_code(expression[index]) != 999) {
@@ -392,6 +450,36 @@ float calculate(string postfix_expression) {
             float first_operand = numbers.top();
             numbers.pop();
             numbers.push(absolute(first_operand));
+            index++;
+        } else if (postfix_expression[index] == 'F') {
+            float first_operand = numbers.top();
+            numbers.pop();
+            int first_operand_cut = (int) first_operand;
+            float first_operand_cut_float = static_cast<float> (first_operand_cut);
+            numbers.push(first_operand_cut_float);
+            index++;
+        } else if (postfix_expression[index] == 'C') {
+            float first_operand = numbers.top();
+            numbers.pop();
+            int first_operand_cut = (int) first_operand;
+            first_operand_cut++;
+            float first_operand_cut_float = static_cast<float> (first_operand_cut);
+            numbers.push(first_operand_cut_float);
+            index++;
+        } else if (postfix_expression[index] == 'q') {
+            float first_operand = numbers.top();
+            numbers.pop();
+            numbers.push(arcsin(first_operand));
+            index++;
+        } else if (postfix_expression[index] == 'w') {
+            float first_operand = numbers.top();
+            numbers.pop();
+            numbers.push(arccos(first_operand));
+            index++;
+        } else if (postfix_expression[index] == 'e') {
+            float first_operand = numbers.top();
+            numbers.pop();
+            numbers.push(arctan(first_operand));
             index++;
         } else {
             index++;
