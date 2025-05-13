@@ -208,7 +208,6 @@ string postfix(string expression) {
     
     int previous_type = 2; // closing parenthesis 1, number 1, pi 1, e 1, factorial 1, others 2
     int current_operation_code = 0;
-    int parenthesis_depth = 0;
     
     while (index < expression.length()){
         if (isdigit(expression[index]) || (expression[index] == '-' && previous_type == 2)){
@@ -226,25 +225,23 @@ string postfix(string expression) {
                 current_operation += expression[index];
                 index++;
             }
+            previous_type = 1;
             
             if (current_operation == "pi") {
                 postfix_expression += to_string(pi);
                 postfix_expression += " ";
-                previous_type = 1;
                 continue;
-            } else if (current_operation == "e") {
+            }
+            if (current_operation == "e") {
                 postfix_expression += to_string(e);
                 postfix_expression += " ";
-                previous_type = 1;
                 continue;
             }
             
-            previous_type = 2; // if not pi or e
-            
-            int moving_parenthesis_depth = parenthesis_depth;
+            int moving_parenthesis_depth = 0;
             string first_operand = "";
             index++; // skip opening parenthesis
-            while (!((expression[index] == ',' || expression[index] == ')') && moving_parenthesis_depth == parenthesis_depth)) {
+            while (!((expression[index] == ',' || expression[index] == ')') && moving_parenthesis_depth == 0)) {
                 first_operand += expression[index];
                 if (expression[index] == '(') {
                     moving_parenthesis_depth++;
@@ -258,10 +255,10 @@ string postfix(string expression) {
             postfix_expression += " ";
             
             if (current_operation == "log") {
-                moving_parenthesis_depth = parenthesis_depth;
+                moving_parenthesis_depth = 0;
                 string second_operand = "";
                 index++; // skip comma
-                while (!(expression[index] == ')' && moving_parenthesis_depth == parenthesis_depth)) {
+                while (!(expression[index] == ')' && moving_parenthesis_depth == 0)) {
                     second_operand += expression[index];
                     if (expression[index] == '(') {
                         moving_parenthesis_depth++;
@@ -316,7 +313,7 @@ string postfix(string expression) {
             }
         } else if (operation_code(expression[index]) != 999) {
             current_operation_code = operation_code(expression[index]);
-            if (operations.size() == 0 || current_operation_code > operations.top() || parenthesis_depth > 0) {
+            if (operations.size() == 0 || current_operation_code > operations.top()) {
                 operations.push(current_operation_code);
             } else {
                 while(operations.size() > 0 && current_operation_code <= operations.top()) {
@@ -329,20 +326,22 @@ string postfix(string expression) {
             previous_type = 2;
             index++;
         } else if (expression[index] == '(') {
-            operations.push(0);
-            parenthesis_depth++;
-            previous_type = 2;
-            index++;
-        } else if (expression[index] == ')') {
-            while(operations.top() != 0) {
-                postfix_expression += operation_string(operations.top());
-                postfix_expression += " ";
-                operations.pop();
+            index++; //skip parenthesis
+            string sub_expression = "";
+            int moving_parenthesis_depth = 0;
+            while(!(expression[index] == ')' && moving_parenthesis_depth == 0)) {
+                sub_expression += expression[index];
+                if (expression[index] == '(') {
+                    moving_parenthesis_depth++;
+                } else if (expression[index] == ')') {
+                    moving_parenthesis_depth--;
+                }
+                index++;
             }
-            operations.pop();
-            parenthesis_depth--;
+            postfix_expression += postfix(sub_expression);
+            postfix_expression += " ";
             previous_type = 1;
-            index++;
+            index++; //skip parenthesis
         } else if (expression[index] == '!') {
             postfix_expression += "!";
             postfix_expression += " ";
